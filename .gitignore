@@ -1,0 +1,42 @@
+# ============================
+# Python
+# ============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# ============================
+# Virtual Environments
+# ============================
+venv/
+env/
+.venv/
+
+# ============================
+# IDE & Editor Files
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============================
+# Dataset Files (LARGE)
+# ============================
+# All HDF5 downloaded from ann-benchmarks
+*.hdf5
+
+# All JSON and JSONL produced during preprocessing
+*.jsonl
+*.json
+
+# Keep README / configs if necessary
+!README.md
+!.gitignore
+
+# ============================
+# MacOS Metadata
+# ============================
+.DS_Store
