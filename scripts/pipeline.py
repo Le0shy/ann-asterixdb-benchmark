@@ -41,7 +41,7 @@ def download_hdf5(dataset_name, raw_dir):
 
 
 def clean_dataset(dataset_name, base_dir):
-    """Remove all generated files for a dataset."""
+    """Remove all generated files for a dataset, including subdatasets."""
     files = [
         os.path.join(base_dir, "raw", f"{dataset_name}.hdf5"),
         os.path.join(base_dir, "datasets", f"{dataset_name}_train.jsonl"),
@@ -60,6 +60,16 @@ def clean_dataset(dataset_name, base_dir):
             os.remove(f)
             removed = True
 
+    # Also clean up any subdataset files (pattern: *_train_*.jsonl)
+    datasets_dir = os.path.join(base_dir, "datasets")
+    if os.path.exists(datasets_dir):
+        for filename in os.listdir(datasets_dir):
+            if filename.startswith(f"{dataset_name}_train_") and filename.endswith(".jsonl"):
+                filepath = os.path.join(datasets_dir, filename)
+                print(f"[CLEAN] Removing subdataset: {filepath}")
+                os.remove(filepath)
+                removed = True
+
     if not removed:
         print("[CLEAN] No files found for this dataset.")
 
@@ -72,8 +82,12 @@ def main():
     # ------------------------------------------------------
     if len(sys.argv) < 3:
         print("Usage:")
-        print("  python pipeline.py <dataset_name> <num_k> <num_queries>")
+        print("  python pipeline.py <dataset_name> <num_k> <num_queries> [num_records]")
         print("  python pipeline.py <dataset_name> clean")
+        print("")
+        print("Examples:")
+        print("  python pipeline.py fashion-mnist-784-euclidean 256 1000")
+        print("  python pipeline.py fashion-mnist-784-euclidean 256 1000 20000")
         sys.exit(1)
 
     dataset_name = sys.argv[1]
@@ -95,12 +109,15 @@ def main():
     # ------------------------------------------------------
     num_k = sys.argv[2]
     num_queries = sys.argv[3]
+    num_records = sys.argv[4] if len(sys.argv) > 4 else None
 
     print("==============================================")
     print("ANN PIPELINE START")
     print(f"Dataset:      {dataset_name}")
     print(f"num_k:        {num_k}")
     print(f"num_queries:  {num_queries}")
+    if num_records:
+        print(f"num_records:  {num_records} (subdataset)")
     print("==============================================\n")
 
     # Step 1: Download HDF5
@@ -116,37 +133,58 @@ def main():
         dataset_name
     ], cwd=base_dir)
 
+    # Step 2.5: Create subdataset if num_records is specified
+    if num_records:
+        print("\n==============================================")
+        print("[step] Creating subdataset")
+        print("==============================================")
+        run_subprocess([
+            sys.executable,
+            os.path.join(scripts_dir, "create_subdataset.py"),
+            dataset_name,
+            num_records
+        ], cwd=base_dir)
+
     # Step 3: Load dataset
     print("\n==============================================")
     print("[step] Loading dataset to AsterixDB")
     print("==============================================")
-    run_subprocess([
+    load_cmd = [
         sys.executable,
         os.path.join(scripts_dir, "load_dataset.py"),
         dataset_name
-    ], cwd=base_dir)
+    ]
+    if num_records:
+        load_cmd.append(num_records)
+    run_subprocess(load_cmd, cwd=base_dir)
 
     # Step 4: Create index
     print("\n==============================================")
     print("[step] Creating vector index")
     print("==============================================")
-    run_subprocess([
+    index_cmd = [
         sys.executable,
         os.path.join(scripts_dir, "create_index.py"),
         dataset_name,
         num_k
-    ], cwd=base_dir)
+    ]
+    if num_records:
+        index_cmd.append(num_records)
+    run_subprocess(index_cmd, cwd=base_dir)
 
-    # Step 5: Run recall
+    # Step 5: Run recall evaluation (comparing ANN vs exact)
     print("\n==============================================")
-    print("[step] Running recall evaluation")
+    print("[step] Running recall evaluation (ANN vs Exact)")
     print("==============================================")
-    run_subprocess([
+    query_cmd = [
         sys.executable,
-        os.path.join(scripts_dir, "run_query.py"),
+        os.path.join(scripts_dir, "run_query_compare.py"),
         dataset_name,
         num_queries
-    ], cwd=base_dir)
+    ]
+    if num_records:
+        query_cmd.append(num_records)
+    run_subprocess(query_cmd, cwd=base_dir)
 
     print("\n==============================================")
     print("ANN PIPELINE DONE")

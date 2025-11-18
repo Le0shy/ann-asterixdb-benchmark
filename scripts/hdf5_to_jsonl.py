@@ -60,8 +60,11 @@ def main():
     if "train" in f:
         train = f["train"]
         train_output = os.path.join(DATASETS_DIR, f"{dataset_name}_train.jsonl")
-        print(f"Converting train dataset → {train_output}...")
-        write_jsonl(train_output, train)
+        if os.path.exists(train_output):
+            print(f"Train dataset already exists: {train_output} (skipping)")
+        else:
+            print(f"Converting train dataset → {train_output}...")
+            write_jsonl(train_output, train)
     else:
         print("No 'train' dataset found inside HDF5.")
 
@@ -69,8 +72,11 @@ def main():
     if "test" in f:
         test = f["test"]
         test_output = os.path.join(TESTS_DIR, f"{dataset_name}_test.jsonl")
-        print(f"Converting test vectors → {test_output}...")
-        write_jsonl(test_output, test)
+        if os.path.exists(test_output):
+            print(f"Test vectors already exist: {test_output} (skipping)")
+        else:
+            print(f"Converting test vectors → {test_output}...")
+            write_jsonl(test_output, test)
     else:
         print("No 'test' dataset found inside HDF5.")
 
@@ -78,8 +84,11 @@ def main():
     if "neighbors" in f:
         neighbors = f["neighbors"]
         neighbors_output = os.path.join(NEIGHBORS_DIR, f"{dataset_name}_neighbors.jsonl")
-        print(f"Converting neighbors → {neighbors_output}...")
-        write_neighbors(neighbors_output, neighbors)
+        if os.path.exists(neighbors_output):
+            print(f"Neighbors already exist: {neighbors_output} (skipping)")
+        else:
+            print(f"Converting neighbors → {neighbors_output}...")
+            write_neighbors(neighbors_output, neighbors)
     else:
         print("No 'neighbors' ground-truth found inside HDF5.")
 

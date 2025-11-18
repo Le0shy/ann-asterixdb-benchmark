@@ -22,15 +22,21 @@ def extract_dimension(dataset_name: str) -> int:
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python create_index.py <dataset_name> <num_k>")
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print("Usage: python create_index.py <dataset_name> <num_k> [num_records]")
         print("Example: python create_index.py fashion-mnist-784-euclidean 256")
+        print("Example: python create_index.py fashion-mnist-784-euclidean 256 20000")
         sys.exit(1)
 
     dataset_name = sys.argv[1]                     # e.g. fashion-mnist-784-euclidean
-    ds_name_astx = dataset_name.replace("-", "_")  # Asterix-safe name
-
     num_k = int(sys.argv[2])                       # number of leaf centroids
+    num_records = sys.argv[3] if len(sys.argv) == 4 else None
+    
+    # Adjust dataset name for subdataset
+    if num_records:
+        ds_name_astx = f"{dataset_name}_{num_records}".replace("-", "_")
+    else:
+        ds_name_astx = dataset_name.replace("-", "_")  # Asterix-safe name
 
     # Automatically extract dimension
     dimension = extract_dimension(dataset_name)
