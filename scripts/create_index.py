@@ -41,7 +41,7 @@ def main():
     # Automatically extract dimension
     dimension = extract_dimension(dataset_name)
 
-    index_name = "ix"
+    index_name = "ix1"
 
     statement = f"""
     USE VectorTest;
@@ -52,7 +52,7 @@ def main():
         "dimension": {dimension},
         "train_list": 10000,
         "description": " ",
-        "num_k": {num_k},
+        "num_clusters": {num_k},
         "similarity": "Euclidean"
     }};
     """
