@@ -50,8 +50,7 @@ def main():
 
     CREATE VECTOR INDEX {index_name} ON {ds_name_astx}(embedding VECTOR) WITH {{
         "dimension": {dimension},
-        "train_list": 10000,
-        "description": " ",
+        "train_list_number": 10000,
         "num_clusters": {num_k},
         "similarity": "Euclidean"
     }};
